@@ -1,12 +1,14 @@
-# AI System Agent - Windows Installer
-# Run:
-# irm https://raw.githubusercontent.com/rapazd3-ux/smart-sys-buddy/main/public/downloads/ai-system-agent/install.ps1 | iex
+# ============================================================
+# AI System Agent - Windows Installer (Tauri)
+# Repo: rapazd3-ux/smart-sys-buddy
+# Project path: public/downloads/ai-system-agent
+# ============================================================
 
 $ErrorActionPreference = "Stop"
 
-$repo = "rapazd3-ux/smart-sys-buddy"
 $appName = "AI System Agent"
-$projectPath = "public/downloads/ai-system-agent"
+$repoUrl = "https://github.com/rapazd3-ux/smart-sys-buddy.git"
+$projectSubPath = "public/downloads/ai-system-agent"
 
 Write-Host ""
 Write-Host "╔════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
@@ -14,67 +16,109 @@ Write-Host "║        🤖 AI System Agent - Instalador Automático          �
 Write-Host "╚════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 Write-Host ""
 
-# ================= ADMIN CHECK =================
+# ------------------------------------------------------------
+# Admin check
+# ------------------------------------------------------------
 $isAdmin = ([Security.Principal.WindowsPrincipal] `
     [Security.Principal.WindowsIdentity]::GetCurrent()
 ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
 if (-not $isAdmin) {
-    Write-Host "⚠️ Executando sem administrador (recomendado rodar como admin)" -ForegroundColor Yellow
+    Write-Host "⚠️ Recomenda-se executar como Administrador." -ForegroundColor Yellow
     Write-Host ""
 }
 
-# ================= DEP CHECK =================
-function Require-Cmd($cmd, $name) {
+# ------------------------------------------------------------
+# Dependency check
+# ------------------------------------------------------------
+function Require-Command($cmd, $name) {
     if (-not (Get-Command $cmd -ErrorAction SilentlyContinue)) {
-        throw "$name não está instalado. Instale e tente novamente."
+        Write-Host "❌ $name não encontrado." -ForegroundColor Red
+        throw "$name é obrigatório para continuar."
     }
 }
 
-Require-Cmd git "Git"
-Require-Cmd node "Node.js"
-Require-Cmd npm "NPM"
-Require-Cmd cargo "Rust (cargo)"
+Write-Host "🔍 Verificando dependências..." -ForegroundColor Cyan
+Require-Command git   "Git"
+Require-Command node  "Node.js"
+Require-Command npm   "NPM"
+Require-Command cargo "Rust (cargo)"
+Write-Host "✓ Dependências OK" -ForegroundColor Green
+Write-Host ""
 
-# ================= CLONE =================
+# ------------------------------------------------------------
+# Clone repository
+# ------------------------------------------------------------
 $tempDir = Join-Path $env:TEMP "ai-system-agent-build"
-if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force }
+
+if (Test-Path $tempDir) {
+    Remove-Item $tempDir -Recurse -Force
+}
 
 Write-Host "📂 Clonando repositório smart-sys-buddy..." -ForegroundColor Cyan
-git clone "https://github.com/$repo.git" $tempDir
+git clone $repoUrl $tempDir
 
 if (-not (Test-Path $tempDir)) {
     throw "Falha ao clonar o repositório."
 }
 
-# ================= ENTER PROJECT =================
-$fullProjectPath = Join-Path $tempDir $projectPath
+# ------------------------------------------------------------
+# Enter project directory
+# ------------------------------------------------------------
+$projectPath = Join-Path $tempDir $projectSubPath
 
-if (-not (Test-Path $fullProjectPath)) {
-    throw "Pasta do projeto não encontrada: $projectPath"
+if (-not (Test-Path $projectPath)) {
+    throw "Pasta do projeto não encontrada: $projectSubPath"
 }
 
-Set-Location $fullProjectPath
+Set-Location $projectPath
 
-# ================= INSTALL DEPENDENCIES =================
+# ------------------------------------------------------------
+# Install Node dependencies
+# ------------------------------------------------------------
 Write-Host "📦 Instalando dependências (npm install)..." -ForegroundColor Cyan
 npm install
 
-# ================= BUILD =================
-Write-Host "🏗️ Compilando o app (tauri build)..." -ForegroundColor Cyan
+# ------------------------------------------------------------
+# Build Tauri app
+# ------------------------------------------------------------
+Write-Host "🏗️ Compilando o aplicativo (tauri build)..." -ForegroundColor Cyan
 npm run tauri build
 
-# ================= INSTALL =================
-$installer = Get-ChildItem "src-tauri\target\release\bundle\nsis\*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+# ------------------------------------------------------------
+# Locate Windows installer
+# ------------------------------------------------------------
+$msiPath = "src-tauri\target\release\bundle\msi"
+$exePath = "src-tauri\target\release\bundle\nsis"
 
-if (-not $installer) {
-    throw "Build concluído, mas o instalador .exe não foi encontrado."
+$installer = $null
+
+if (Test-Path $msiPath) {
+    $installer = Get-ChildItem "$msiPath\*.msi" -ErrorAction SilentlyContinue | Select-Object -First 1
 }
 
-Write-Host "🔧 Instalando aplicativo..." -ForegroundColor Cyan
-Start-Process $installer.FullName -ArgumentList "/S" -Wait
+if (-not $installer -and (Test-Path $exePath)) {
+    $installer = Get-ChildItem "$exePath\*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+}
 
-# ================= CLEANUP =================
+if (-not $installer) {
+    throw "Build concluído, mas nenhum instalador (.msi ou .exe) foi encontrado."
+}
+
+# ------------------------------------------------------------
+# Install
+# ------------------------------------------------------------
+Write-Host "🔧 Instalando $($installer.Name)..." -ForegroundColor Cyan
+
+if ($installer.Extension -eq ".msi") {
+    Start-Process msiexec.exe -ArgumentList "/i `"$($installer.FullName)`" /passive /norestart" -Wait
+} else {
+    Start-Process $installer.FullName -ArgumentList "/S" -Wait
+}
+
+# ------------------------------------------------------------
+# Cleanup
+# ------------------------------------------------------------
 Set-Location $env:USERPROFILE
 Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
 
