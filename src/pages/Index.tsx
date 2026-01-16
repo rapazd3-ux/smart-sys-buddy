@@ -16,7 +16,8 @@ import {
   MessageSquare,
   FileText,
   BookOpen,
-  Menu
+  Menu,
+  Code
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -235,16 +236,20 @@ const Index = () => {
             transition={{ delay: 0.5 }}
           >
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button size="lg" className="gap-2 text-lg px-8 w-full sm:w-auto">
-                <Download className="w-5 h-5" />
-                Download para Windows
-              </Button>
+              <Link to="/source-code">
+                <Button size="lg" className="gap-2 text-lg px-8 w-full sm:w-auto">
+                  <Code className="w-5 h-5" />
+                  Ver Código Fonte
+                </Button>
+              </Link>
             </motion.div>
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button size="lg" variant="outline" className="gap-2 text-lg px-8 w-full sm:w-auto">
-                <Download className="w-5 h-5" />
-                Download para Linux
-              </Button>
+              <Link to="/docs">
+                <Button size="lg" variant="outline" className="gap-2 text-lg px-8 w-full sm:w-auto">
+                  <Download className="w-5 h-5" />
+                  Instruções de Build
+                </Button>
+              </Link>
             </motion.div>
           </motion.div>
 
@@ -528,16 +533,20 @@ const Index = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button size="lg" className="gap-2 text-lg px-8 w-full sm:w-auto">
-                <Download className="w-5 h-5" />
-                Download Gratuito
-              </Button>
+              <Link to="/source-code">
+                <Button size="lg" className="gap-2 text-lg px-8 w-full sm:w-auto">
+                  <Code className="w-5 h-5" />
+                  Ver Código Fonte
+                </Button>
+              </Link>
             </motion.div>
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button size="lg" variant="outline" className="gap-2 text-lg px-8 w-full sm:w-auto">
-                <Github className="w-5 h-5" />
-                Ver Código Fonte
-              </Button>
+              <Link to="/docs">
+                <Button size="lg" variant="outline" className="gap-2 text-lg px-8 w-full sm:w-auto">
+                  <BookOpen className="w-5 h-5" />
+                  Documentação
+                </Button>
+              </Link>
             </motion.div>
           </div>
         </motion.div>
@@ -557,6 +566,9 @@ const Index = () => {
               Código aberto • Sem telemetria • Sua privacidade é respeitada
             </p>
             <div className="flex items-center gap-4">
+              <Link to="/source-code" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
+                Código Fonte
+              </Link>
               <Link to="/docs" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
                 Documentação
               </Link>
