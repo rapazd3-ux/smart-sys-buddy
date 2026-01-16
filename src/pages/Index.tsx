@@ -132,6 +132,10 @@ const Index = () => {
       <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Recursos</a>
       <a href="#security" className="text-muted-foreground hover:text-foreground transition-colors">Segurança</a>
       <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">Como Funciona</a>
+      <Link to="/releases" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+        <Download className="w-4 h-4" />
+        Releases
+      </Link>
       <Link to="/docs" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
         <BookOpen className="w-4 h-4" />
         Docs
