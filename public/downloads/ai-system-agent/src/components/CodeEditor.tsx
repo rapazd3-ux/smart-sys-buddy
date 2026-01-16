@@ -11,8 +11,12 @@ import {
   Search,
   Settings,
   GitBranch,
-  Folder
+  Folder,
+  Terminal,
+  Puzzle
 } from 'lucide-react';
+import { IntegratedTerminal } from './Terminal';
+import { ExtensionManager } from './ExtensionManager';
 
 interface FileNode {
   name: string;
@@ -27,15 +31,23 @@ const initialFiles: FileNode[] = [
     type: 'folder',
     children: [
       { name: 'main.rs', type: 'file', content: 'fn main() {\n    println!("Hello, world!");\n}' },
-      { name: 'lib.rs', type: 'file', content: '// Library code here' },
+      { name: 'lib.rs', type: 'file', content: '// Library code here\n\npub mod utils;\npub mod config;' },
+      {
+        name: 'utils',
+        type: 'folder',
+        children: [
+          { name: 'mod.rs', type: 'file', content: 'pub fn helper() -> String {\n    "Helper".to_string()\n}' },
+        ],
+      },
     ],
   },
   {
     name: 'Cargo.toml',
     type: 'file',
-    content: '[package]\nname = "my-project"\nversion = "0.1.0"\nedition = "2021"',
+    content: '[package]\nname = "my-project"\nversion = "0.1.0"\nedition = "2021"\n\n[dependencies]\nserde = "1.0"',
   },
-  { name: 'README.md', type: 'file', content: '# My Project\n\nDescription here...' },
+  { name: 'README.md', type: 'file', content: '# My Project\n\nA cool Rust project.\n\n## Getting Started\n\n```bash\ncargo run\n```' },
+  { name: '.gitignore', type: 'file', content: '/target\n*.log\n.env' },
 ];
 
 interface OpenTab {
@@ -45,12 +57,16 @@ interface OpenTab {
   modified: boolean;
 }
 
+type BottomPanel = 'terminal' | 'extensions' | null;
+
 export function CodeEditor() {
   const [files] = useState<FileNode[]>(initialFiles);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['src']));
   const [openTabs, setOpenTabs] = useState<OpenTab[]>([]);
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [editorContent, setEditorContent] = useState('');
+  const [bottomPanel, setBottomPanel] = useState<BottomPanel>('terminal');
+  const [showSidebar, setShowSidebar] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const toggleFolder = (path: string) => {
@@ -133,6 +149,14 @@ export function CodeEditor() {
         );
       }
 
+      const getFileIcon = (name: string) => {
+        if (name.endsWith('.rs')) return 'text-orange-400';
+        if (name.endsWith('.toml')) return 'text-blue-400';
+        if (name.endsWith('.md')) return 'text-blue-300';
+        if (name.startsWith('.')) return 'text-zinc-500';
+        return 'text-zinc-400';
+      };
+
       return (
         <button
           key={fullPath}
@@ -141,7 +165,7 @@ export function CodeEditor() {
             activeTab === fullPath ? 'bg-zinc-700/70 text-white' : 'text-zinc-300'
           }`}
         >
-          <File className="w-4 h-4 text-zinc-500 ml-5" />
+          <File className={`w-4 h-4 ml-5 ${getFileIcon(node.name)}`} />
           <span>{node.name}</span>
         </button>
       );
@@ -158,12 +182,23 @@ export function CodeEditor() {
     return 'plaintext';
   };
 
+  const toggleBottomPanel = (panel: BottomPanel) => {
+    if (bottomPanel === panel) {
+      setBottomPanel(null);
+    } else {
+      setBottomPanel(panel);
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full bg-zinc-900">
       {/* Editor Toolbar */}
       <div className="h-10 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between px-3">
         <div className="flex items-center gap-2">
-          <button className="p-1.5 hover:bg-zinc-800 rounded text-zinc-400 hover:text-white">
+          <button 
+            onClick={() => setShowSidebar(!showSidebar)}
+            className={`p-1.5 rounded text-zinc-400 hover:text-white ${showSidebar ? 'bg-zinc-800' : 'hover:bg-zinc-800'}`}
+          >
             <FolderOpen className="w-4 h-4" />
           </button>
           <button className="p-1.5 hover:bg-zinc-800 rounded text-zinc-400 hover:text-white">
@@ -181,19 +216,36 @@ export function CodeEditor() {
           <button className="p-1.5 hover:bg-zinc-800 rounded text-zinc-400 hover:text-white">
             <GitBranch className="w-4 h-4" />
           </button>
+          <button 
+            onClick={() => toggleBottomPanel('extensions')}
+            className={`p-1.5 rounded text-zinc-400 hover:text-white ${bottomPanel === 'extensions' ? 'bg-violet-600 text-white' : 'hover:bg-zinc-800'}`}
+          >
+            <Puzzle className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={() => toggleBottomPanel('terminal')}
+            className={`p-1.5 rounded text-zinc-400 hover:text-white ${bottomPanel === 'terminal' ? 'bg-violet-600 text-white' : 'hover:bg-zinc-800'}`}
+          >
+            <Terminal className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
       <div className="flex-1 flex overflow-hidden">
         {/* File Explorer */}
-        <div className="w-56 bg-zinc-900 border-r border-zinc-800 overflow-y-auto">
-          <div className="p-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-            Explorer
+        {showSidebar && (
+          <div className="w-56 bg-zinc-900 border-r border-zinc-800 overflow-y-auto">
+            <div className="p-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center justify-between">
+              <span>Explorer</span>
+              <button className="p-1 hover:bg-zinc-800 rounded">
+                <Plus className="w-3 h-3" />
+              </button>
+            </div>
+            <div className="px-1">{renderFileTree(files)}</div>
           </div>
-          <div className="px-1">{renderFileTree(files)}</div>
-        </div>
+        )}
 
-        {/* Editor Area */}
+        {/* Main Editor Area */}
         <div className="flex-1 flex flex-col">
           {/* Tabs */}
           <div className="h-9 bg-zinc-850 border-b border-zinc-800 flex items-center overflow-x-auto">
@@ -270,6 +322,14 @@ export function CodeEditor() {
           </div>
         </div>
       </div>
+
+      {/* Bottom Panel */}
+      {bottomPanel === 'terminal' && <IntegratedTerminal />}
+      {bottomPanel === 'extensions' && (
+        <div className="h-80 border-t border-zinc-800">
+          <ExtensionManager />
+        </div>
+      )}
     </div>
   );
 }
