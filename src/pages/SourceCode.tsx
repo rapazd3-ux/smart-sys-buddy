@@ -863,27 +863,79 @@ const SourceCode = () => {
               </Button>
             </div>
 
-            {/* Quick Start */}
-            <Card className="bg-muted/30">
-              <CardContent className="p-4">
-                <h3 className="font-semibold mb-2 flex items-center gap-2">
-                  <Download className="w-4 h-4 text-primary" />
-                  Início Rápido
+            {/* Quick Start - Terminal Installation */}
+            <Card className="bg-gradient-to-br from-violet-500/10 to-purple-500/10 border-violet-500/20">
+              <CardContent className="p-6">
+                <h3 className="font-semibold mb-4 flex items-center gap-2 text-lg">
+                  <Download className="w-5 h-5 text-violet-400" />
+                  Instalação via Terminal
                 </h3>
-                <div className="grid md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground mb-2">Linux (Ubuntu/Debian):</p>
-                    <code className="block bg-background p-2 rounded text-xs">
-                      git clone [repo] && cd ai-system-agent && ./scripts/build-linux.sh
+                
+                <div className="space-y-4">
+                  {/* Linux */}
+                  <div className="p-4 bg-background/50 rounded-lg border border-border/50">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-medium text-sm flex items-center gap-2">
+                        🐧 Linux (Ubuntu/Debian)
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard('curl -fsSL https://raw.githubusercontent.com/SEU-USUARIO/ai-system-agent/main/install.sh | bash', 'linux-install')}
+                        className="h-7"
+                      >
+                        {copiedPath === 'linux-install' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                      </Button>
+                    </div>
+                    <code className="block bg-zinc-900 text-green-400 p-3 rounded text-sm font-mono">
+                      curl -fsSL https://raw.githubusercontent.com/SEU-USUARIO/ai-system-agent/main/install.sh | bash
                     </code>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground mb-2">Windows:</p>
-                    <code className="block bg-background p-2 rounded text-xs">
-                      git clone [repo]; cd ai-system-agent; .\scripts\build-windows.ps1
+
+                  {/* Windows */}
+                  <div className="p-4 bg-background/50 rounded-lg border border-border/50">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-medium text-sm flex items-center gap-2">
+                        🪟 Windows (PowerShell)
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard('irm https://raw.githubusercontent.com/SEU-USUARIO/ai-system-agent/main/install.ps1 | iex', 'windows-install')}
+                        className="h-7"
+                      >
+                        {copiedPath === 'windows-install' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                      </Button>
+                    </div>
+                    <code className="block bg-zinc-900 text-blue-400 p-3 rounded text-sm font-mono">
+                      irm https://raw.githubusercontent.com/SEU-USUARIO/ai-system-agent/main/install.ps1 | iex
+                    </code>
+                  </div>
+
+                  {/* Build from source */}
+                  <div className="p-4 bg-background/50 rounded-lg border border-border/50">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-medium text-sm flex items-center gap-2">
+                        🔧 Build do Código Fonte
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard('git clone https://github.com/SEU-USUARIO/ai-system-agent.git && cd ai-system-agent && npm install && npm run tauri build', 'source-build')}
+                        className="h-7"
+                      >
+                        {copiedPath === 'source-build' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                      </Button>
+                    </div>
+                    <code className="block bg-zinc-900 text-yellow-400 p-3 rounded text-sm font-mono overflow-x-auto">
+                      git clone https://github.com/SEU-USUARIO/ai-system-agent.git && cd ai-system-agent && npm install && npm run tauri build
                     </code>
                   </div>
                 </div>
+
+                <p className="text-xs text-muted-foreground mt-4 flex items-center gap-1">
+                  💡 Substitua <code className="bg-muted px-1 rounded">SEU-USUARIO</code> pelo nome do seu repositório GitHub
+                </p>
               </CardContent>
             </Card>
           </motion.div>
@@ -903,6 +955,9 @@ const SourceCode = () => {
               <CardContent className="p-4 font-mono text-sm">
                 <pre className="text-muted-foreground">
 {`ai-system-agent/
+├── .github/
+│   └── workflows/
+│       └── build.yml          # GitHub Actions para build automático
 ├── src-tauri/
 │   ├── Cargo.toml
 │   ├── tauri.conf.json
@@ -916,13 +971,14 @@ const SourceCode = () => {
 │   ├── App.tsx
 │   ├── store.ts
 │   └── components/
-│       ├── Chat.tsx
+│       ├── Chat.tsx           # Chat principal
+│       ├── CodeEditor.tsx     # Editor tipo VS Code
+│       ├── AISidebar.tsx      # IA para ajudar com código
 │       ├── Settings.tsx
 │       ├── CommandQueue.tsx
 │       └── Sidebar.tsx
-├── scripts/
-│   ├── build-linux.sh
-│   └── build-windows.ps1
+├── install.sh                 # Script instalação Linux
+├── install.ps1                # Script instalação Windows
 ├── package.json
 └── README.md`}
                 </pre>
