@@ -1,15 +1,43 @@
-import { MessageSquare, Settings, History, Shield, Terminal } from 'lucide-react';
+import { 
+  MessageSquare, 
+  Settings, 
+  Terminal, 
+  Code2,
+  Shield 
+} from 'lucide-react';
 
 interface SidebarProps {
   activeTab: 'chat' | 'settings';
   setActiveTab: (tab: 'chat' | 'settings') => void;
+  viewMode: 'chat' | 'editor';
+  setViewMode: (mode: 'chat' | 'editor') => void;
 }
 
-export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
+export function Sidebar({ activeTab, setActiveTab, viewMode, setViewMode }: SidebarProps) {
   const navItems = [
-    { id: 'chat', icon: MessageSquare, label: 'Chat' },
-    { id: 'settings', icon: Settings, label: 'Configurações' },
+    { id: 'chat', icon: MessageSquare, label: 'Chat', view: 'chat' as const },
+    { id: 'editor', icon: Code2, label: 'Editor', view: 'editor' as const },
+    { id: 'settings', icon: Settings, label: 'Configurações', view: 'chat' as const },
   ];
+
+  const handleClick = (item: typeof navItems[0]) => {
+    if (item.id === 'editor') {
+      setViewMode('editor');
+    } else if (item.id === 'chat') {
+      setViewMode('chat');
+      setActiveTab('chat');
+    } else if (item.id === 'settings') {
+      setViewMode('chat');
+      setActiveTab('settings');
+    }
+  };
+
+  const isActive = (item: typeof navItems[0]) => {
+    if (item.id === 'editor') return viewMode === 'editor';
+    if (item.id === 'chat') return viewMode === 'chat' && activeTab === 'chat';
+    if (item.id === 'settings') return viewMode === 'chat' && activeTab === 'settings';
+    return false;
+  };
 
   return (
     <aside className="w-16 bg-zinc-900 border-r border-zinc-800 flex flex-col items-center py-4">
@@ -23,9 +51,9 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         {navItems.map((item) => (
           <button
             key={item.id}
-            onClick={() => setActiveTab(item.id as 'chat' | 'settings')}
+            onClick={() => handleClick(item)}
             className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
-              activeTab === item.id
+              isActive(item)
                 ? 'bg-violet-600 text-white'
                 : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
             }`}
