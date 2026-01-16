@@ -881,14 +881,14 @@ const SourceCode = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => copyToClipboard('curl -fsSL https://raw.githubusercontent.com/SEU-USUARIO/ai-system-agent/main/install.sh | bash', 'linux-install')}
+                        onClick={() => copyToClipboard('curl -fsSL https://raw.githubusercontent.com/rapazd3-ux/ai-system-agent/main/install.sh | bash', 'linux-install')}
                         className="h-7"
                       >
                         {copiedPath === 'linux-install' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                       </Button>
                     </div>
                     <code className="block bg-zinc-900 text-green-400 p-3 rounded text-sm font-mono">
-                      curl -fsSL https://raw.githubusercontent.com/SEU-USUARIO/ai-system-agent/main/install.sh | bash
+                      curl -fsSL https://raw.githubusercontent.com/rapazd3-ux/ai-system-agent/main/install.sh | bash
                     </code>
                   </div>
 
@@ -901,14 +901,14 @@ const SourceCode = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => copyToClipboard('irm https://raw.githubusercontent.com/SEU-USUARIO/ai-system-agent/main/install.ps1 | iex', 'windows-install')}
+                        onClick={() => copyToClipboard('irm https://raw.githubusercontent.com/rapazd3-ux/ai-system-agent/main/install.ps1 | iex', 'windows-install')}
                         className="h-7"
                       >
                         {copiedPath === 'windows-install' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                       </Button>
                     </div>
                     <code className="block bg-zinc-900 text-blue-400 p-3 rounded text-sm font-mono">
-                      irm https://raw.githubusercontent.com/SEU-USUARIO/ai-system-agent/main/install.ps1 | iex
+                      irm https://raw.githubusercontent.com/rapazd3-ux/ai-system-agent/main/install.ps1 | iex
                     </code>
                   </div>
 
@@ -921,21 +921,24 @@ const SourceCode = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => copyToClipboard('git clone https://github.com/SEU-USUARIO/ai-system-agent.git && cd ai-system-agent && npm install && npm run tauri build', 'source-build')}
+                        onClick={() => copyToClipboard('git clone https://github.com/rapazd3-ux/ai-system-agent.git && cd ai-system-agent && npm install && npm run tauri build', 'source-build')}
                         className="h-7"
                       >
                         {copiedPath === 'source-build' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                       </Button>
                     </div>
                     <code className="block bg-zinc-900 text-yellow-400 p-3 rounded text-sm font-mono overflow-x-auto">
-                      git clone https://github.com/SEU-USUARIO/ai-system-agent.git && cd ai-system-agent && npm install && npm run tauri build
+                      git clone https://github.com/rapazd3-ux/ai-system-agent.git && cd ai-system-agent && npm install && npm run tauri build
                     </code>
                   </div>
                 </div>
 
-                <p className="text-xs text-muted-foreground mt-4 flex items-center gap-1">
-                  💡 Substitua <code className="bg-muted px-1 rounded">SEU-USUARIO</code> pelo nome do seu repositório GitHub
-                </p>
+                <div className="mt-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                  <p className="text-sm text-green-400 flex items-center gap-2">
+                    <Github className="w-4 h-4" />
+                    Conectado: <a href="https://github.com/rapazd3-ux" target="_blank" className="underline hover:text-green-300">github.com/rapazd3-ux</a>
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
