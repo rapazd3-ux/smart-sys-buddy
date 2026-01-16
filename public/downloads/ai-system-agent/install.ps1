@@ -4,17 +4,16 @@
 
 $ErrorActionPreference = "Stop"
 
-$repo = "rapazd3-ux/smart-sys-buddy"
 $appName = "AI System Agent"
+$repo = "rapazd3-ux/smart-sys-buddy"
 
-# ================= HEADER =================
 Write-Host ""
 Write-Host "╔════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
 Write-Host "║        🤖 AI System Agent - Instalador Automático          ║" -ForegroundColor Cyan
 Write-Host "╚════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 Write-Host ""
 
-# ================= ADMIN CHECK =================
+# Admin check
 $isAdmin = ([Security.Principal.WindowsPrincipal] `
     [Security.Principal.WindowsIdentity]::GetCurrent()
 ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -24,28 +23,25 @@ if (-not $isAdmin) {
     Write-Host ""
 }
 
-# ================= ARCH =================
-$arch = if ([Environment]::Is64BitOperatingSystem) { "x64" } else { "x86" }
-Write-Host "✓ Sistema detectado: Windows $arch" -ForegroundColor Green
-Write-Host ""
-
-# ================= RELEASE =================
-Write-Host "📦 Buscando última release..." -ForegroundColor Cyan
+Write-Host "📦 Verificando releases..." -ForegroundColor Cyan
 $releaseUrl = "https://api.github.com/repos/$repo/releases/latest"
 
 try {
     $release = Invoke-RestMethod -Uri $releaseUrl -UseBasicParsing
 
-    $asset =
-        ($release.assets | Where-Object { $_.name -like "*.msi" } | Select-Object -First 1) ??
-        ($release.assets | Where-Object { $_.name -like "*.exe" } | Select-Object -First 1)
+    if (-not $release.assets -or $release.assets.Count -eq 0) {
+        throw "Nenhum asset encontrado"
+    }
+
+    $asset = $release.assets |
+        Where-Object { $_.name -like "*.exe" -or $_.name -like "*.msi" } |
+        Select-Object -First 1
 
     if (-not $asset) {
-        throw "Nenhum instalador encontrado"
+        throw "Nenhum instalador (.exe/.msi) encontrado na release"
     }
 
     Write-Host "✓ Release encontrada: $($release.tag_name)" -ForegroundColor Green
-    Write-Host ""
 
     $tempFile = Join-Path $env:TEMP $asset.name
     Write-Host "📥 Baixando $($asset.name)..." -ForegroundColor Cyan
@@ -59,19 +55,15 @@ try {
     }
 
     Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+
+    Write-Host "✅ Instalação concluída!" -ForegroundColor Green
 }
 catch {
     Write-Host ""
-    Write-Host "⚠️ Nenhuma release encontrada. Pulando build automático." -ForegroundColor Yellow
-    Write-Host "ℹ️ Este script NÃO tenta clonar repositório inexistente."
+    Write-Host "⚠️ Nenhuma release instalável encontrada." -ForegroundColor Yellow
+    Write-Host "ℹ️ O projeto está presente no repositório, mas não há instalador publicado."
+    Write-Host "👉 Compile via README.md ou publique uma release com .exe/.msi."
     Write-Host ""
 }
 
-# ================= DONE =================
-Write-Host ""
-Write-Host "╔════════════════════════════════════════════════════════════╗" -ForegroundColor Green
-Write-Host "║           ✅ Instalação finalizada                          ║" -ForegroundColor Green
-Write-Host "╚════════════════════════════════════════════════════════════╝" -ForegroundColor Green
-Write-Host ""
-Write-Host "O $appName foi processado."
-Write-Host ""
+Write-Host "Finalizado."
