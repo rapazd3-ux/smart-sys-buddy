@@ -4,8 +4,9 @@
 
 $ErrorActionPreference = "Stop"
 
-$appName = "AI System Agent"
 $repo = "rapazd3-ux/smart-sys-buddy"
+$appName = "AI System Agent"
+$projectPath = "public/downloads/ai-system-agent"
 
 Write-Host ""
 Write-Host "╔════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
@@ -13,57 +14,70 @@ Write-Host "║        🤖 AI System Agent - Instalador Automático          �
 Write-Host "╚════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
 Write-Host ""
 
-# Admin check
+# ================= ADMIN CHECK =================
 $isAdmin = ([Security.Principal.WindowsPrincipal] `
     [Security.Principal.WindowsIdentity]::GetCurrent()
 ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
 if (-not $isAdmin) {
-    Write-Host "⚠️ Executando sem privilégios de administrador" -ForegroundColor Yellow
+    Write-Host "⚠️ Executando sem administrador (recomendado rodar como admin)" -ForegroundColor Yellow
     Write-Host ""
 }
 
-Write-Host "📦 Verificando releases..." -ForegroundColor Cyan
-$releaseUrl = "https://api.github.com/repos/$repo/releases/latest"
-
-try {
-    $release = Invoke-RestMethod -Uri $releaseUrl -UseBasicParsing
-
-    if (-not $release.assets -or $release.assets.Count -eq 0) {
-        throw "Nenhum asset encontrado"
+# ================= DEP CHECK =================
+function Require-Cmd($cmd, $name) {
+    if (-not (Get-Command $cmd -ErrorAction SilentlyContinue)) {
+        throw "$name não está instalado. Instale e tente novamente."
     }
-
-    $asset = $release.assets |
-        Where-Object { $_.name -like "*.exe" -or $_.name -like "*.msi" } |
-        Select-Object -First 1
-
-    if (-not $asset) {
-        throw "Nenhum instalador (.exe/.msi) encontrado na release"
-    }
-
-    Write-Host "✓ Release encontrada: $($release.tag_name)" -ForegroundColor Green
-
-    $tempFile = Join-Path $env:TEMP $asset.name
-    Write-Host "📥 Baixando $($asset.name)..." -ForegroundColor Cyan
-    Invoke-WebRequest $asset.browser_download_url -OutFile $tempFile -UseBasicParsing
-
-    Write-Host "🔧 Instalando..." -ForegroundColor Cyan
-    if ($asset.name -like "*.msi") {
-        Start-Process msiexec.exe -ArgumentList "/i `"$tempFile`" /passive /norestart" -Wait
-    } else {
-        Start-Process $tempFile -ArgumentList "/S" -Wait
-    }
-
-    Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
-
-    Write-Host "✅ Instalação concluída!" -ForegroundColor Green
-}
-catch {
-    Write-Host ""
-    Write-Host "⚠️ Nenhuma release instalável encontrada." -ForegroundColor Yellow
-    Write-Host "ℹ️ O projeto está presente no repositório, mas não há instalador publicado."
-    Write-Host "👉 Compile via README.md ou publique uma release com .exe/.msi."
-    Write-Host ""
 }
 
-Write-Host "Finalizado."
+Require-Cmd git "Git"
+Require-Cmd node "Node.js"
+Require-Cmd npm "NPM"
+Require-Cmd cargo "Rust (cargo)"
+
+# ================= CLONE =================
+$tempDir = Join-Path $env:TEMP "ai-system-agent-build"
+if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force }
+
+Write-Host "📂 Clonando repositório smart-sys-buddy..." -ForegroundColor Cyan
+git clone "https://github.com/$repo.git" $tempDir
+
+if (-not (Test-Path $tempDir)) {
+    throw "Falha ao clonar o repositório."
+}
+
+# ================= ENTER PROJECT =================
+$fullProjectPath = Join-Path $tempDir $projectPath
+
+if (-not (Test-Path $fullProjectPath)) {
+    throw "Pasta do projeto não encontrada: $projectPath"
+}
+
+Set-Location $fullProjectPath
+
+# ================= INSTALL DEPENDENCIES =================
+Write-Host "📦 Instalando dependências (npm install)..." -ForegroundColor Cyan
+npm install
+
+# ================= BUILD =================
+Write-Host "🏗️ Compilando o app (tauri build)..." -ForegroundColor Cyan
+npm run tauri build
+
+# ================= INSTALL =================
+$installer = Get-ChildItem "src-tauri\target\release\bundle\nsis\*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+
+if (-not $installer) {
+    throw "Build concluído, mas o instalador .exe não foi encontrado."
+}
+
+Write-Host "🔧 Instalando aplicativo..." -ForegroundColor Cyan
+Start-Process $installer.FullName -ArgumentList "/S" -Wait
+
+# ================= CLEANUP =================
+Set-Location $env:USERPROFILE
+Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+
+Write-Host ""
+Write-Host "✅ $appName instalado com sucesso!" -ForegroundColor Green
+Write-Host ""
